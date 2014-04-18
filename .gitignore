@@ -1,0 +1,15 @@
+INSTALL.txt
+LICENSE.txt
+README.txt
+demos/
+extras/documentation
+nbproject/
+_notes/
+.svn/
+dwsync.xml
+
+/public/screensize.settings
+
+/public/envitz/.sencha/
+
+/public/envitz/build/
