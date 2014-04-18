@@ -1,7 +1,6 @@
 ﻿/**
  *
- * @link      http://www.Linspira.com/js/ for the canonical source
- * @copyright Copyright (c) 2011-2014 Linspira.com
+ * @copyright Copyright (c) 2011-2014 ZyraTech.com
  * @license   IP of Richie Bartlett, Jr. (Rich@RichieBartlett.com) [All Rights Reserved.]
  
  Inspired by: https://github.com/brainfucker/node-base64/blob/master/js_base64_for_comparsion.js
