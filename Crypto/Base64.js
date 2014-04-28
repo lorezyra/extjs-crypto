@@ -4,6 +4,7 @@
  * @license   IP of Richie Bartlett, Jr. (Rich@RichieBartlett.com) [All Rights Reserved.]
  
  Inspired by: https://github.com/brainfucker/node-base64/blob/master/js_base64_for_comparsion.js
+  Technical white paper on base64 implementation: http://www.ietf.org/rfc/rfc3548.txt
  */
 
 
