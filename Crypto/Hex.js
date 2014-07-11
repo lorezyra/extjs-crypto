@@ -48,6 +48,13 @@ Ext.define('Ext.Crypto.Hex', {
 		this.charset = this.DEFAULT_CHARSET;
 	},
 
+    /**
+     * Returns the numeric value of string ch found at index.
+     *
+     * @param ch
+     *            a byte[] to convert to Hex integer
+     * @return HEX digit
+     */
 	toDigit: function (ch, index) {
         var digit = parseInt(ch, 16);
         if (digit == -1) {
@@ -124,7 +131,51 @@ Ext.define('Ext.Crypto.Hex', {
 	
 	getCharset: function () {
         return this.charset;
-    }
+    },
+	
+    /**
+     * Performs an inversion of the HEX num
+     *
+     * @param num
+     *           HEX integer to convert to inverted Hex integer
+     * @return HEX integer
+     */
+	invert: function(/*Integer (in Hex)*/ num) {
+		//TODO: dynamically handle larger numbers.
+		var x;
+
+		x = ((num >> 24) & 0xff) |       // byte 3 to byte 0
+			((num << 8)  & 0xff0000) |   // byte 1 to byte 2
+			((num >> 8)  & 0xff00) |     // byte 2 to byte 1
+			((num << 24) & 0xff000000);  // byte 0 to byte 3
+			
+		return x; // flipped value!
+	},
+
+
+/// This section inspired by: http://developer.classpath.org/doc/java/lang/Integer-source.html
+	
+    /**
+     * Performs a binary left bit rotation of the HEX num
+     *
+     * @param intToShift
+     *           HEX integer to rotate
+     * @return HEX integer
+     */
+	rotateLeft: function(/*HEX Integer*/ intToShift, /*Integer*/ ShiftX) {
+		return (intToShift << ShiftX) | (intToShift >>> ShiftX);
+	},
+	
+    /**
+     * Performs a binary right bit rotation  of the HEX num
+     *
+     * @param num
+     *           HEX integer to rotate
+     * @return HEX integer
+     */
+	rotateRight: function(/*HEX Integer*/ intToShift, /*Integer*/ ShiftX) {
+		return (intToShift << - ShiftX) | (intToShift >>> ShiftX);
+	}
 
 	
 });
