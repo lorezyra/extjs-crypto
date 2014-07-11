@@ -49,7 +49,8 @@ Ext.define('Ext.Crypto.SHA1', {
         Ext.apply(this, config);
 		
 		//setup *private* vars:
-		this.digestSize = 80;
+		this.digestSize = 160;
+		this.ROUNDS_MIN = 80;
 		
 		this.resetHash();
 	},

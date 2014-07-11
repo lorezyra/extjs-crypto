@@ -96,10 +96,10 @@ Ext.define('Ext.Crypto.Base64', {
     chunkSeparatorLength: 1,
 	
 	/* default the table to use for codec */
-	encodeTable: STANDARD_ENCODE_TABLE,
+	encodeTable: this.STANDARD_ENCODE_TABLE,
 	
 	/* table to use for codec with default pad code*/
-	keyMap: encodeTable + PAD_DEFAULT,
+	keyMap: encodeTable + this.PAD_DEFAULT,
 
 
 
@@ -147,14 +147,14 @@ Ext.define('Ext.Crypto.Base64', {
 			chr3 = input.charCodeAt(i++);
 			
 			enc1 = chr1 >> 2;
-			enc2 = ((chr1 & BYTES_PER_UNENCODED_BLOCK) << BYTES_PER_ENCODED_BLOCK) | (chr2 >> BYTES_PER_ENCODED_BLOCK);
-			enc3 = ((chr2 & 15) << 2) | (chr3 >> BITS_PER_ENCODED_BYTE);
-			enc4 = chr3 & MASK_6BITS;
+			enc2 = ((chr1 & this.BYTES_PER_UNENCODED_BLOCK) << this.BYTES_PER_ENCODED_BLOCK) | (chr2 >> this.BYTES_PER_ENCODED_BLOCK);
+			enc3 = ((chr2 & 15) << 2) | (chr3 >> this.BITS_PER_ENCODED_BYTE);
+			enc4 = chr3 & this.MASK_6BITS;
 			
 			if (isNaN(chr2)) {
-				enc3 = enc4 = MASK_6BITS + 1;
+				enc3 = enc4 = this.MASK_6BITS + 1;
 			} else if (isNaN(chr3)) {
-				enc4 = MASK_6BITS + 1;
+				enc4 = this.MASK_6BITS + 1;
 			}
 			
 			output += this.encodeTable.charAt(enc1) +
@@ -217,16 +217,16 @@ Ext.define('Ext.Crypto.Base64', {
 			enc3 = this.keyMap.indexOf(input.charAt(i++));
 			enc4 = this.keyMap.indexOf(input.charAt(i++));
 			
-			chr1 = (enc1 << 2) | (enc2 >> BYTES_PER_ENCODED_BLOCK);
-			chr2 = ((enc2 & 15) << BYTES_PER_ENCODED_BLOCK) | (enc3 >> 2);
-			chr3 = ((enc3 & BYTES_PER_UNENCODED_BLOCK) << BITS_PER_ENCODED_BYTE) | enc4;
+			chr1 = (enc1 << 2) | (enc2 >> this.BYTES_PER_ENCODED_BLOCK);
+			chr2 = ((enc2 & 15) << this.BYTES_PER_ENCODED_BLOCK) | (enc3 >> 2);
+			chr3 = ((enc3 & this.BYTES_PER_UNENCODED_BLOCK) << this.BITS_PER_ENCODED_BYTE) | enc4;
 			
 			output += String.fromCharCode(chr1);
 			
-			if (enc3 != MASK_6BITS + 1) {
+			if (enc3 != this.MASK_6BITS + 1) {
 				output += String.fromCharCode(chr2);
 			}
-			if (enc4 != MASK_6BITS + 1) {
+			if (enc4 != this.MASK_6BITS + 1) {
 				output += String.fromCharCode(chr3);
 			}
 			
@@ -244,7 +244,7 @@ Ext.define('Ext.Crypto.Base64', {
      * @param octet
 	 */
 	isBase64: function (octet) {
-        return octet == PAD_DEFAULT || (octet >= 0 && octet < DECODE_TABLE.length && DECODE_TABLE[octet] != -1);
+        return octet == this.PAD_DEFAULT || (octet >= 0 && octet < this.DECODE_TABLE.length && this.DECODE_TABLE[octet] != -1);
     },
 	
     /**
@@ -259,7 +259,7 @@ Ext.define('Ext.Crypto.Base64', {
 			saltString = "";
         
 		for (i = 1; i <= num; i++) {
-			rand = Ext.Number.randomInt(0, keyMap.length); //<<-- Math.random() - not as reliable as a closed system such as a UNIX server.
+			rand = Ext.Number.randomInt(0, this.keyMap.length); //<<-- Math.random() - not as reliable as a closed system such as a UNIX server.
             
 			saltString += this.keyMap.charAt(rand);
         }
@@ -273,23 +273,23 @@ Ext.define('Ext.Crypto.Base64', {
 			trit,
 			i = 0, 
 			string = "", 
-			limit = array.length * BYTES_PER_ENCODED_BLOCK;
+			limit = array.length * this.BYTES_PER_ENCODED_BLOCK;
 
 		while (i < limit) {
 			i2 = i;
-			trit = ((array[i2 >> 2] >> ((BYTES_PER_UNENCODED_BLOCK - (i2 & BYTES_PER_UNENCODED_BLOCK)) << BYTES_PER_UNENCODED_BLOCK)) & 0xFF) << 16;
+			trit = ((array[i2 >> 2] >> ((this.BYTES_PER_UNENCODED_BLOCK - (i2 & this.BYTES_PER_UNENCODED_BLOCK)) << this.BYTES_PER_UNENCODED_BLOCK)) & 0xFF) << 16;
 			i2++;
-			trit |= ((array[i2 >> 2] >> ((BYTES_PER_UNENCODED_BLOCK - (i2 & BYTES_PER_UNENCODED_BLOCK)) << BYTES_PER_UNENCODED_BLOCK)) & 0xFF) << 8;
+			trit |= ((array[i2 >> 2] >> ((this.BYTES_PER_UNENCODED_BLOCK - (i2 & this.BYTES_PER_UNENCODED_BLOCK)) << this.BYTES_PER_UNENCODED_BLOCK)) & 0xFF) << 8;
 			i2++;
-			trit |= (array[i2 >> 2] >> ((BYTES_PER_UNENCODED_BLOCK - (i2 & BYTES_PER_UNENCODED_BLOCK)) << BYTES_PER_UNENCODED_BLOCK)) & 0xFF;
-			string += this.keyMap[ (trit >> 18) & MASK_6BITS ];
-			string += this.keyMap[ (trit >> 12) & MASK_6BITS ];
+			trit |= (array[i2 >> 2] >> ((this.BYTES_PER_UNENCODED_BLOCK - (i2 & this.BYTES_PER_UNENCODED_BLOCK)) << this.BYTES_PER_UNENCODED_BLOCK)) & 0xFF;
+			string += this.keyMap[ (trit >> 18) & this.MASK_6BITS ];
+			string += this.keyMap[ (trit >> 12) & this.MASK_6BITS ];
 			i++;
 
 			if (i >= limit) {
 				string += this.PAD;
 			} else {
-				string += this.keyMap[ (trit >> BITS_PER_ENCODED_BYTE) & MASK_6BITS ];
+				string += this.keyMap[ (trit >> this.BITS_PER_ENCODED_BYTE) & this.MASK_6BITS ];
 			}
 
 			i++;
@@ -297,7 +297,7 @@ Ext.define('Ext.Crypto.Base64', {
 			if (i >= limit) {
 				string += this.PAD;
 			} else {
-				string += this.keyMap[ trit & MASK_6BITS ];
+				string += this.keyMap[ trit & this.MASK_6BITS ];
 			}
 
 			i++;
