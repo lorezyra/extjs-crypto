@@ -6,7 +6,9 @@
  Inspired by: https://github.com/brainfucker/node-base64/blob/master/js_base64_for_comparsion.js
     		  http://svn.apache.org/repos/asf/webservices/commons/trunk/modules/util/
 			  https://commons.apache.org/proper/commons-codec/apidocs/src-html/org/apache/commons/codec/binary/BaseNCodec.html
-  Technical white paper on base64 implementation: http://www.ietf.org/rfc/rfc3548.txt & http://www.ietf.org/rfc/rfc2045.txt
+  Technical white paper on base64 implementation: 
+  	http://www.ietf.org/rfc/rfc3548.txt
+	http://www.ietf.org/rfc/rfc2045.txt
  */
 
 
@@ -30,7 +32,12 @@ Ext.define('Ext.Crypto.Base64', {
     BYTES_PER_ENCODED_BLOCK: 4,
 
     /* Chunk separator per RFC 2045 section 2.1. */
-	CHUNK_SEPARATOR: ['\r', '\n'],
+	CHUNK_SEPARATOR: [
+		'\r' /* 0x000D */, // Carriage Return <CR>
+		'\n' /* 0x000A */, // Line Feed <LF>
+		0x2028, // Line Separator <LS>
+		0x2029  // Paragraph Separator <PS>		
+	],
 	
     /* Byte used to pad encoded output. */
 	PAD_DEFAULT: '=',
@@ -68,7 +75,7 @@ Ext.define('Ext.Crypto.Base64', {
     ],
 	
     /** Mask used to extract 6 bits; used when encoding */
-	MASK_6BITS: 0x3f,
+	MASK_6BITS: 0x3F,
 
     /* Convenience variable to help us determine when our buffer is going to run out of room and needs resizing. */
 	decodeSize: 0,
@@ -104,7 +111,7 @@ Ext.define('Ext.Crypto.Base64', {
         config = config || {};
         Ext.apply(this, config);
 		
-		setKeyMap();
+		this.setKeyMap();
 	},
 	
 
@@ -238,6 +245,66 @@ Ext.define('Ext.Crypto.Base64', {
 	 */
 	isBase64: function (octet) {
         return octet == PAD_DEFAULT || (octet >= 0 && octet < DECODE_TABLE.length && DECODE_TABLE[octet] != -1);
-    }
+    },
+	
+    /**
+     * Generates a string of random chars from the Base64 alphabet.
+     *
+     * @param num
+     *            Number of chars to generate.
+     */
+	getRandomSalt: function (num) {
+        var rand, 
+			i = 1,
+			saltString = "";
+        
+		for (i = 1; i <= num; i++) {
+			rand = Ext.Number.randomInt(0, keyMap.length); //<<-- Math.random() - not as reliable as a closed system such as a UNIX server.
+            
+			saltString += this.keyMap.charAt(rand);
+        }
+
+        return saltString;
+    },
+	
+	
+	arrayToBase64: function(array) {
+		var i2, 
+			trit,
+			i = 0, 
+			string = "", 
+			limit = array.length * BYTES_PER_ENCODED_BLOCK;
+
+		while (i < limit) {
+			i2 = i;
+			trit = ((array[i2 >> 2] >> ((BYTES_PER_UNENCODED_BLOCK - (i2 & BYTES_PER_UNENCODED_BLOCK)) << BYTES_PER_UNENCODED_BLOCK)) & 0xFF) << 16;
+			i2++;
+			trit |= ((array[i2 >> 2] >> ((BYTES_PER_UNENCODED_BLOCK - (i2 & BYTES_PER_UNENCODED_BLOCK)) << BYTES_PER_UNENCODED_BLOCK)) & 0xFF) << 8;
+			i2++;
+			trit |= (array[i2 >> 2] >> ((BYTES_PER_UNENCODED_BLOCK - (i2 & BYTES_PER_UNENCODED_BLOCK)) << BYTES_PER_UNENCODED_BLOCK)) & 0xFF;
+			string += this.keyMap[ (trit >> 18) & MASK_6BITS ];
+			string += this.keyMap[ (trit >> 12) & MASK_6BITS ];
+			i++;
+
+			if (i >= limit) {
+				string += this.PAD;
+			} else {
+				string += this.keyMap[ (trit >> BITS_PER_ENCODED_BYTE) & MASK_6BITS ];
+			}
+
+			i++;
+
+			if (i >= limit) {
+				string += this.PAD;
+			} else {
+				string += this.keyMap[ trit & MASK_6BITS ];
+			}
+
+			i++;
+
+		}
+		return string;
+	}
+
 
 });
