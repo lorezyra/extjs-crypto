@@ -12,6 +12,8 @@
  */
 
 
+//TODO: create baseNcodec? https://commons.apache.org/proper/commons-codec/apidocs/src-html/org/apache/commons/codec/binary/BaseNCodec.html
+
 Ext.define('Ext.Crypto.Base64', {
 	alias: 'crypto.base64',
 	alternateClassName: ['Ext.Crypto.base64'],
