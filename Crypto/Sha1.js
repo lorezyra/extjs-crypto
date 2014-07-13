@@ -108,7 +108,7 @@ Ext.define('Ext.Crypto.SHA1', {
 			e0 = e;
 
 			// Computation
-			for (j = _i = 0; _i < 80; j = ++_i) {
+			for (j = _i = 0; _i < this.ROUNDS_MIN; j = ++_i) {
 				if (j < 16) {
 					state[j] = string[(i + j) << 2 >> 2] | 0;
 				} else {

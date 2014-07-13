@@ -71,7 +71,11 @@ Ext.define('Ext.Crypto', {
 		 */
 		SHA_512: "SHA-512"		
 	},
-	
+
+
+	/* default block size */
+	DEFAULT_BLOCKSIZE: 16, // 512/32
+
     /**
      *  MIME chunk size per RFC 2045 section 6.8.
      */

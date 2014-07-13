@@ -75,7 +75,7 @@ Ext.define('Ext.Crypto.Base64', {
             24, 25, -1, -1, -1, -1, 63, -1, 26, 27, 28, 29, 30, 31, 32, 33, 34,
             35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
     ],
-	
+
     /** Mask used to extract 6 bits; used when encoding */
 	MASK_6BITS: 0x3F,
 
@@ -84,7 +84,7 @@ Ext.define('Ext.Crypto.Base64', {
 
     /* Convenience variable to help us determine when our buffer is going to run out of room and needs resizing. */
 	encodeSize: 0,
-	
+
     /**
      * Chunksize for encoding. Not used when decoding.
      * A value of zero or less implies no chunking of the encoded data.
@@ -96,10 +96,10 @@ Ext.define('Ext.Crypto.Base64', {
      * Size of chunk separator. Not used unless {@link #lineLength} &gt; 0.
      */
     chunkSeparatorLength: 1,
-	
+
 	/* default the table to use for codec */
 	encodeTable: this.STANDARD_ENCODE_TABLE,
-	
+
 	/* table to use for codec with default pad code*/
 	keyMap: encodeTable + this.PAD_DEFAULT,
 
