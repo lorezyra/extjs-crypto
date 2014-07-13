@@ -37,7 +37,15 @@ Ext.define('Ext.Crypto.SHA1', {
 			0xc3d2e1f0
 		];
 	},
-	
+
+	K_CONSTANT: [ // http://en.wikipedia.org/wiki/Nothing_up_my_sleeve_number
+		0x5A827999, 	// 2^30 * 2^.5
+		0x6ED9EBA1, 	// 2^30 * 3^.5
+		0x8F1BBCDC,		// 2^30 * 5^.5
+		0xCA62C1D6, 	// 2^30 * 10^.5
+	],
+
+
 
 
 
@@ -109,11 +117,12 @@ Ext.define('Ext.Crypto.SHA1', {
 				}
 				
 				t = (((((a << 5) | (a >>> 27)) + e) | 0) + state[j << 2 >> 2]) | 0;
-	
+				
+				
 				if (j < 20) {
-					t = (t + ((((b & c) | (~b & d)) + 0x5a827999) | 0)) | 0;
+					t = (t + ((((b & c) | (~b & d)) + this.K_CONSTANT[0]) | 0)) | 0;
 				} else if (j < 40) {
-					t = (t + (((b ^ c ^ d) + 0x6ed9eba1) | 0)) | 0;
+					t = (t + (((b ^ c ^ d) + this.K_CONSTANT[1]) | 0)) | 0;
 				} else if (j < 60) {
 					t = (t + (((b & c) | (b & d) | (c & d)) - 0x70e44324) | 0) | 0;
 				} else {

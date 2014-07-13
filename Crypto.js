@@ -17,25 +17,6 @@ Ext.define('Ext.Crypto', {
 
 	compatibility: '4.2',
 
-/*
-	constructor: function(config) {
-        config = config || {};
-        Ext.apply(this, config);
-	},
-	
-	encode: function(value, type) {
-		type = (type || 'base64').toLowerCase();
-
-		return this[type](value);
-	},
-	
-	decode: function(value, type) {
-		type = (type || 'base64').toLowerCase();
-
-		return this[type](value);
-	},
-*/
-
 	charSets: {
      	/* CharEncodingISO Latin Alphabet No. 1, a.k.a. ISO-LATIN-1. */
 		ISO_8859_1 : "ISO-8859-1",
@@ -107,7 +88,55 @@ Ext.define('Ext.Crypto', {
      */
 	DEFAULT_BUFFER_SIZE: 8192,
 
+
+/*
+	constructor: function(config) {
+        config = config || {};
+        Ext.apply(this, config);
+	},
 	
+	encode: function(value, type) {
+		type = (type || 'base64').toLowerCase();
+
+		return this[type](value);
+	},
+	
+	decode: function(value, type) {
+		type = (type || 'base64').toLowerCase();
+
+		return this[type](value);
+	},
+*/
+
+
+    /**
+     * Checks if n is a prime number or not.
+     * @param n - integer
+     * @return true if n is prime
+     */
+	isPrime: function (n) {
+		var factor,
+			sqrtN = Math.sqrt(n);
+
+		for (factor = 2; factor <= sqrtN; factor++) {
+			if (!(n % factor)) {
+				return false;
+			}
+		}
+
+		return true;
+	},
+
+    /**
+     * Get decimal portion of n
+     * @param n - integer
+     * @return decimal (32 bit integer)
+     */
+	fractionalPart: function (n) {
+		//return ((x - Math.floor(x)) * 0x100000000) | 0;
+		return ((n - (n | 0)) * 0x100000000) | 0;
+	},
+
     /**
      * Checks if a byte value is whitespace or not.
      * Whitespace is taken to mean: space, tab, CR, LF
@@ -129,16 +158,6 @@ Ext.define('Ext.Crypto', {
 
    //NOTE: only supports US_ASCII; not UTF_8 safe
 	reverse: function (/*String*/ strg){//v2.0
-		// reverses the order of the letters in passed string strg
-		// Example: "hello" becomes "olleh"...
-	   /* expensive method:
-	   var temp="";
-	   for(var x=0; x<strg.length; x++){
-		   temp=strg.substring(x, x+1) + temp;
-		}
-	   return(temp);
-	   */
-	   //convert string to array and return
 	   //return strg.split('').reverse().join('');
 	   return Array.from(strg).reverse().join('');
 
