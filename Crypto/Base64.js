@@ -50,9 +50,15 @@ Ext.define('Ext.Crypto.Base64', {
 		0x2029  // Paragraph Separator <PS>		
 	],
 	
-    /* Byte used to pad encoded output. */
+    /**
+     * @private
+     * Byte used to pad encoded output.
+     */
 	PAD_DEFAULT: '=',
-	PAD: PAD_DEFAULT, // instance variable just in case it needs to vary later
+    /**
+     * @pubic
+     */
+	PAD: '=', // instance variable just in case it needs to vary later
 	
     /**
      * @private
@@ -93,18 +99,6 @@ Ext.define('Ext.Crypto.Base64', {
 	 */
 	MASK_6BITS: 0x3F,
 
-    /*
-     * @private
-	 * Convenience variable to help us determine when our buffer is going to run out of room and needs resizing.
-	 */
-	decodeSize: 0,
-
-    /*
-     * @private
-	 * Convenience variable to help us determine when our buffer is going to run out of room and needs resizing. 
-	 */
-	encodeSize: 0,
-
     /**
      * @private
      * Chunksize for encoding. Not used when decoding.
@@ -120,16 +114,16 @@ Ext.define('Ext.Crypto.Base64', {
     chunkSeparatorLength: 1,
 
     /*
-     * @private
+     * @public
 	 * default the table to use for codec
 	 */
-	encodeTable: this.STANDARD_ENCODE_TABLE,
+	encodeTable: '',
 
     /*
      * @private
-	 * table to use for codec with default pad code
+	 * char-array to use for codec with default pad code
 	 */
-	keyMap: this.encodeTable + this.PAD_DEFAULT,
+	keyMap: '',
 
 
 
@@ -141,22 +135,25 @@ Ext.define('Ext.Crypto.Base64', {
         config = config || {};
         Ext.apply(this, config);
 		
-		this.setKeyMap();
+		//setup default values:
+		this.encodeTable = config.encodeTable? config.encodeTable : this.STANDARD_ENCODE_TABLE;
+
+		this.setKeyMap( this.encodeTable );
 	},
 	
 
 	/**
 	 * Function resets the keyMap to the encodeTable config and adds the Pad code
 	 */
-	setKeyMap: function () {
-        this.keyMap = this.encodeTable + this.PAD;
+	setKeyMap: function (encodeTable) {
+        this.keyMap = encodeTable + this.PAD;
     },
 
 	/**
 	 * Function returns the boolean value if url-safe table is used for encoding
 	 */
-	isUrlSafe: function () {
-        return this.encodeTable == this.URL_SAFE_ENCODE_TABLE;
+	isURLsafe: function () {
+        return this.encodeTable === this.URL_SAFE_ENCODE_TABLE;
     },
 
 
@@ -166,7 +163,8 @@ Ext.define('Ext.Crypto.Base64', {
      * @returns {string}
      */
 	encode: function (value) {
-		var len,
+		var me = this,
+			len,
 			chr1,
 			chr2,
 			chr3 = "",
@@ -177,7 +175,7 @@ Ext.define('Ext.Crypto.Base64', {
 			output = '',
 			i = 0;
 		
-		input = this._utf8_encode(input);
+		input = me._utf8_encode(value);
 		len = input.length;
 		
 		while (i < len) {
@@ -186,20 +184,20 @@ Ext.define('Ext.Crypto.Base64', {
 			chr3 = input.charCodeAt(i++);
 			
 			enc1 = chr1 >> 2;
-			enc2 = ((chr1 & this.BYTES_PER_UNENCODED_BLOCK) << this.BYTES_PER_ENCODED_BLOCK) | (chr2 >> this.BYTES_PER_ENCODED_BLOCK);
-			enc3 = ((chr2 & 15) << 2) | (chr3 >> this.BITS_PER_ENCODED_BYTE);
-			enc4 = chr3 & this.MASK_6BITS;
+			enc2 = ((chr1 & me.BYTES_PER_UNENCODED_BLOCK) << me.BYTES_PER_ENCODED_BLOCK) | (chr2 >> me.BYTES_PER_ENCODED_BLOCK);
+			enc3 = ((chr2 & 15) << 2) | (chr3 >> me.BITS_PER_ENCODED_BYTE);
+			enc4 = chr3 & me.MASK_6BITS;
 			
 			if (isNaN(chr2)) {
-				enc3 = enc4 = this.MASK_6BITS + 1;
+				enc3 = enc4 = me.MASK_6BITS + 1;
 			} else if (isNaN(chr3)) {
-				enc4 = this.MASK_6BITS + 1;
+				enc4 = me.MASK_6BITS + 1;
 			}
 			
-			output += this.encodeTable.charAt(enc1) +
-				this.keyMap.charAt(enc2) +
-				this.keyMap.charAt(enc3) +
-				this.keyMap.charAt(enc4);
+			output += me.keyMap.charAt(enc1) +
+				me.keyMap.charAt(enc2) +
+				me.keyMap.charAt(enc3) +
+				me.keyMap.charAt(enc4);
 			chr1 = chr2 = chr3 = "";
 			enc1 = enc2 = enc3 = enc4 = "";
 		}
@@ -214,7 +212,8 @@ Ext.define('Ext.Crypto.Base64', {
      * @returns {string}
      */
 	decode: function (value) {
-		var base64test,
+		var me = this,
+			base64test,
 			len,
 			chr1,
 			chr2,
@@ -226,14 +225,14 @@ Ext.define('Ext.Crypto.Base64', {
 			output = "",
 			i = 0;
 		
-		if ( isURLsafe() ) {
+		if ( me.isURLsafe() ) {
 
 			base64test = /[^A-Za-z0-9\-\_\=]/g;
 
 			if ( base64test.exec(value) ) {
 				//<debug>
 				Ext.Error.raise("There were invalid base64 characters in the input text.\n" +
-				"Valid base64 (URL safe) characters are A-Z, a-z, 0-9, '-', '_',and '" + this.PAD + "'\n" +
+				"Valid base64 (URL safe) characters are A-Z, a-z, 0-9, '-', '_',and '" + me.PAD + "'\n" +
 				"Expect errors in decoding.");
 				//</debug>
 			}
@@ -248,7 +247,7 @@ Ext.define('Ext.Crypto.Base64', {
 			if ( base64test.exec(value) ) {
 				//<debug>
 				Ext.Error.raise("There were invalid base64 characters in the input text.\n" +
-				"Valid base64 characters are A-Z, a-z, 0-9, '+', '/',and '" + this.PAD + "'\n" +
+				"Valid base64 characters are A-Z, a-z, 0-9, '+', '/',and '" + me.PAD + "'\n" +
 				"Expect errors in decoding.");
 				//</debug>
 			}
@@ -258,21 +257,21 @@ Ext.define('Ext.Crypto.Base64', {
 		}
 		
 		while (i < input.length) {
-			enc1 = this.keyMap.indexOf(input.charAt(i++));
-			enc2 = this.keyMap.indexOf(input.charAt(i++));
-			enc3 = this.keyMap.indexOf(input.charAt(i++));
-			enc4 = this.keyMap.indexOf(input.charAt(i++));
+			enc1 = me.keyMap.indexOf(input.charAt(i++));
+			enc2 = me.keyMap.indexOf(input.charAt(i++));
+			enc3 = me.keyMap.indexOf(input.charAt(i++));
+			enc4 = me.keyMap.indexOf(input.charAt(i++));
 			
-			chr1 = (enc1 << 2) | (enc2 >> this.BYTES_PER_ENCODED_BLOCK);
-			chr2 = ((enc2 & 15) << this.BYTES_PER_ENCODED_BLOCK) | (enc3 >> 2);
-			chr3 = ((enc3 & this.BYTES_PER_UNENCODED_BLOCK) << this.BITS_PER_ENCODED_BYTE) | enc4;
+			chr1 = (enc1 << 2) | (enc2 >> me.BYTES_PER_ENCODED_BLOCK);
+			chr2 = ((enc2 & 15) << me.BYTES_PER_ENCODED_BLOCK) | (enc3 >> 2);
+			chr3 = ((enc3 & me.BYTES_PER_UNENCODED_BLOCK) << me.BITS_PER_ENCODED_BYTE) | enc4;
 			
 			output += String.fromCharCode(chr1);
 			
-			if (enc3 != this.MASK_6BITS + 1) {
+			if (enc3 != me.MASK_6BITS + 1) {
 				output += String.fromCharCode(chr2);
 			}
-			if (enc4 != this.MASK_6BITS + 1) {
+			if (enc4 != me.MASK_6BITS + 1) {
 				output += String.fromCharCode(chr3);
 			}
 			
@@ -281,7 +280,7 @@ Ext.define('Ext.Crypto.Base64', {
 		
 		}
 		
-		return this._utf8_decode(output);
+		return me._utf8_decode(output);
 	},
 	
     /**
