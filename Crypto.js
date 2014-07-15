@@ -150,10 +150,13 @@ Ext.define('Ext.Crypto', {
      */
 	isWhiteSpace: function (byteToCheck) {
         switch (byteToCheck) {
-            case ' ' :
-            case '\n' :
-            case '\r' :
-            case '\t' :
+            case ' ' : /* 0x0020  // space char */
+            case '\n': /* 0x000A  // Line Feed <LF> */
+            case '\r': /* 0x000D  // Carriage Return <CR> */
+            case '\t': /* 0x0009  // Horizontal Tab <HT> */
+			case 0x000C: // Form Separator <FF>
+			case 0x2028: // Line Separator <LS>
+			case 0x2029: // Paragraph Separator <PS>		
                 return true;
             default :
                 return false;

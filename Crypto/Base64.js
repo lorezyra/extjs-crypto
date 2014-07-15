@@ -3,8 +3,7 @@
  * @copyright Copyright (c) 2011-2014 ZyraTech.com
  * @license   IP of Richie Bartlett, Jr. (Rich@RichieBartlett.com) [All Rights Reserved.]
  
- Inspired by: https://github.com/brainfucker/node-base64/blob/master/js_base64_for_comparsion.js
-    		  http://svn.apache.org/repos/asf/webservices/commons/trunk/modules/util/
+ Inspired by: http://svn.apache.org/repos/asf/webservices/commons/trunk/modules/util/
 			  https://commons.apache.org/proper/commons-codec/apidocs/src-html/org/apache/commons/codec/binary/BaseNCodec.html
   Technical white paper on base64 implementation: 
   	http://www.ietf.org/rfc/rfc3548.txt
@@ -14,6 +13,16 @@
 
 //TODO: create baseNcodec? https://commons.apache.org/proper/commons-codec/apidocs/src-html/org/apache/commons/codec/binary/BaseNCodec.html
 
+/**
+ * @class Ext.Crypto.Base64
+ *
+ * Base64 is a group of similar binary-to-text encoding schemes that represent binary data in an ASCII string format by
+ * translating it into a radix-64 representation.
+ *
+ * This class is an implementation of base64 encoding and decoding functions and is UTF-8 safe.
+ *
+ * @singleton
+ */
 Ext.define('Ext.Crypto.Base64', {
 	alias: 'crypto.base64',
 	alternateClassName: ['Ext.Crypto.base64'],
@@ -45,7 +54,9 @@ Ext.define('Ext.Crypto.Base64', {
 	PAD_DEFAULT: '=',
 	PAD: PAD_DEFAULT, // instance variable just in case it needs to vary later
 	
-	/*  */
+    /**
+     * @private
+     */
 	STANDARD_ENCODE_TABLE: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
 
     /**
@@ -76,16 +87,26 @@ Ext.define('Ext.Crypto.Base64', {
             35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
     ],
 
-    /** Mask used to extract 6 bits; used when encoding */
+    /** 
+     * @private
+	 * Mask used to extract 6 bits; used when encoding
+	 */
 	MASK_6BITS: 0x3F,
 
-    /* Convenience variable to help us determine when our buffer is going to run out of room and needs resizing. */
+    /*
+     * @private
+	 * Convenience variable to help us determine when our buffer is going to run out of room and needs resizing.
+	 */
 	decodeSize: 0,
 
-    /* Convenience variable to help us determine when our buffer is going to run out of room and needs resizing. */
+    /*
+     * @private
+	 * Convenience variable to help us determine when our buffer is going to run out of room and needs resizing. 
+	 */
 	encodeSize: 0,
 
     /**
+     * @private
      * Chunksize for encoding. Not used when decoding.
      * A value of zero or less implies no chunking of the encoded data.
      * Rounded down to nearest multiple of encodedBlockSize.
@@ -93,15 +114,22 @@ Ext.define('Ext.Crypto.Base64', {
 	lineLength: 0,
 
     /**
+     * @private
      * Size of chunk separator. Not used unless {@link #lineLength} &gt; 0.
      */
     chunkSeparatorLength: 1,
 
-	/* default the table to use for codec */
+    /*
+     * @private
+	 * default the table to use for codec
+	 */
 	encodeTable: this.STANDARD_ENCODE_TABLE,
 
-	/* table to use for codec with default pad code*/
-	keyMap: encodeTable + this.PAD_DEFAULT,
+    /*
+     * @private
+	 * table to use for codec with default pad code
+	 */
+	keyMap: this.encodeTable + this.PAD_DEFAULT,
 
 
 
@@ -131,19 +159,28 @@ Ext.define('Ext.Crypto.Base64', {
         return this.encodeTable == this.URL_SAFE_ENCODE_TABLE;
     },
 
+
+    /**
+     * Encodes given string in to base64 formatted string
+     * @param input
+     * @returns {string}
+     */
 	encode: function (value) {
-		input = escape(value);
-		var chr1,
+		var len,
+			chr1,
 			chr2,
 			chr3 = "",
 			enc1,
 			enc2,
 			enc3,
 			enc4 = "",
-			output = "",
+			output = '',
 			i = 0;
 		
-		do {
+		input = this._utf8_encode(input);
+		len = input.length;
+		
+		while (i < len) {
 			chr1 = input.charCodeAt(i++);
 			chr2 = input.charCodeAt(i++);
 			chr3 = input.charCodeAt(i++);
@@ -165,13 +202,20 @@ Ext.define('Ext.Crypto.Base64', {
 				this.keyMap.charAt(enc4);
 			chr1 = chr2 = chr3 = "";
 			enc1 = enc2 = enc3 = enc4 = "";
-		} while (i < input.length);
+		}
 		
 		return output;
 	},
 	
+
+    /**
+     * Decodes given base64 formatted string
+     * @param input
+     * @returns {string}
+     */
 	decode: function (value) {
 		var base64test,
+			len,
 			chr1,
 			chr2,
 			chr3 = "",
@@ -213,7 +257,7 @@ Ext.define('Ext.Crypto.Base64', {
 			input = value.replace(base64test, "");
 		}
 		
-		do {
+		while (i < input.length) {
 			enc1 = this.keyMap.indexOf(input.charAt(i++));
 			enc2 = this.keyMap.indexOf(input.charAt(i++));
 			enc3 = this.keyMap.indexOf(input.charAt(i++));
@@ -235,9 +279,9 @@ Ext.define('Ext.Crypto.Base64', {
 			chr1 = chr2 = chr3 = "";
 			enc1 = enc2 = enc3 = enc4 = "";
 		
-		} while (i < input.length);
+		}
 		
-		return unescape(output);
+		return this._utf8_decode(output);
 	},
 	
     /**
@@ -306,7 +350,69 @@ Ext.define('Ext.Crypto.Base64', {
 
 		}
 		return string;
-	}
+	},
 
+    /**
+     * @private
+     * UTF-8 encoding
+     */
+    _utf8_encode : function (string) {
+        string = string.replace(/\r\n/g,"\n");
+        var utftext = '',
+            n = 0,
+            len = string.length;
+
+        for (n = 0; n < len; n++) {
+
+            var c = string.charCodeAt(n);
+
+            if (c < 128) {
+                utftext += String.fromCharCode(c);
+            } else if ((c > 127) && (c < 2048)) {
+                utftext += String.fromCharCode((c >> this.BITS_PER_ENCODED_BYTE) | 192);
+                utftext += String.fromCharCode((c & this.MASK_6BITS) | 128);
+            } else {
+                utftext += String.fromCharCode((c >> 12) | 224);
+                utftext += String.fromCharCode(((c >> this.BITS_PER_ENCODED_BYTE) & 63) | 128);
+                utftext += String.fromCharCode((c & this.MASK_6BITS) | 128);
+            }
+
+        }
+
+        return utftext;
+    },
+
+    /**
+     * @private
+     * UTF-8 decoding
+     */
+    _utf8_decode : function (utftext) {
+        var string = '',
+            i = 0,
+            c = 0,
+            c3 = 0,
+            c2 = 0,
+            len = utftext.length;
+
+        while (i < len) {
+            c = utftext.charCodeAt(i);
+
+            if (c < 128) {
+                string += String.fromCharCode(c);
+                i++;
+            } else if ((c > 191) && (c < 224)) {
+                c2 = utftext.charCodeAt(i + 1);
+                string += String.fromCharCode(((c & 31) << this.BITS_PER_ENCODED_BYTE) | (c2 & this.MASK_6BITS));
+                i += 2;
+            } else {
+                c2 = utftext.charCodeAt(i + 1);
+                c3 = utftext.charCodeAt(i + 2);
+                string += String.fromCharCode(((c & 15) << 12) | ((c2 & this.MASK_6BITS) << this.BITS_PER_ENCODED_BYTE) | (c3 & this.MASK_6BITS));
+                i += 3;
+            }
+        }
+
+        return string;
+    }
 
 });
