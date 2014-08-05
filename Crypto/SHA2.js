@@ -47,7 +47,7 @@ Ext.define('Ext.Crypto.SHA2', {
     SHA256_PREFIX: "$5$",
 
     /** The number of bytes the final hash value will have (SHA-512 variant). */
-    SHA512_BLOCKSIZE: 64,
+    SHA512_BLOCKSIZE: 64, // 1024/32
 
     /** The prefixes that can be used to identify this crypt() variant (SHA-512). */
     SHA512_PREFIX: "$6$",
@@ -419,7 +419,167 @@ Ext.define('Ext.Crypto.SHA2', {
 		// TODO
 	 */
 	sha512: function(string, length) {
-		return false;
+		
+		this.resetHash512();
+		this.resetK512();
+
+		// Shortcuts
+		var H = this.HASH_CONSTANT;
+
+		var H0 = H[0];
+		var H1 = H[1];
+		var H2 = H[2];
+		var H3 = H[3];
+		var H4 = H[4];
+		var H5 = H[5];
+		var H6 = H[6];
+		var H7 = H[7];
+
+		var H0h = H0.high;
+		var H0l = H0.low;
+		var H1h = H1.high;
+		var H1l = H1.low;
+		var H2h = H2.high;
+		var H2l = H2.low;
+		var H3h = H3.high;
+		var H3l = H3.low;
+		var H4h = H4.high;
+		var H4l = H4.low;
+		var H5h = H5.high;
+		var H5l = H5.low;
+		var H6h = H6.high;
+		var H6l = H6.low;
+		var H7h = H7.high;
+		var H7l = H7.low;
+
+		// Working variables
+		var ah = H0h;
+		var al = H0l;
+		var bh = H1h;
+		var bl = H1l;
+		var ch = H2h;
+		var cl = H2l;
+		var dh = H3h;
+		var dl = H3l;
+		var eh = H4h;
+		var el = H4l;
+		var fh = H5h;
+		var fl = H5l;
+		var gh = H6h;
+		var gl = H6l;
+		var hh = H7h;
+		var hl = H7l;
+
+		// Rounds
+		for (var i = 0; i < 80; i++) {
+			// Shortcut
+			var Wi = W[i];
+
+			// Extend message
+			if (i < 16) {
+				var Wih = Wi.high = M[offset + i * 2]     | 0;
+				var Wil = Wi.low  = M[offset + i * 2 + 1] | 0;
+			} else {
+				// Gamma0
+				var gamma0x  = W[i - 15];
+				var gamma0xh = gamma0x.high;
+				var gamma0xl = gamma0x.low;
+				var gamma0h  = ((gamma0xh >>> 1) | (gamma0xl << 31)) ^ ((gamma0xh >>> 8) | (gamma0xl << 24)) ^ (gamma0xh >>> 7);
+				var gamma0l  = ((gamma0xl >>> 1) | (gamma0xh << 31)) ^ ((gamma0xl >>> 8) | (gamma0xh << 24)) ^ ((gamma0xl >>> 7) | (gamma0xh << 25));
+
+				// Gamma1
+				var gamma1x  = W[i - 2];
+				var gamma1xh = gamma1x.high;
+				var gamma1xl = gamma1x.low;
+				var gamma1h  = ((gamma1xh >>> 19) | (gamma1xl << 13)) ^ ((gamma1xh << 3) | (gamma1xl >>> 29)) ^ (gamma1xh >>> 6);
+				var gamma1l  = ((gamma1xl >>> 19) | (gamma1xh << 13)) ^ ((gamma1xl << 3) | (gamma1xh >>> 29)) ^ ((gamma1xl >>> 6) | (gamma1xh << 26));
+
+				// W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16]
+				var Wi7  = W[i - 7];
+				var Wi7h = Wi7.high;
+				var Wi7l = Wi7.low;
+
+				var Wi16  = W[i - 16];
+				var Wi16h = Wi16.high;
+				var Wi16l = Wi16.low;
+
+				var Wil = gamma0l + Wi7l;
+				var Wih = gamma0h + Wi7h + ((Wil >>> 0) < (gamma0l >>> 0) ? 1 : 0);
+				var Wil = Wil + gamma1l;
+				var Wih = Wih + gamma1h + ((Wil >>> 0) < (gamma1l >>> 0) ? 1 : 0);
+				var Wil = Wil + Wi16l;
+				var Wih = Wih + Wi16h + ((Wil >>> 0) < (Wi16l >>> 0) ? 1 : 0);
+
+				Wi.high = Wih;
+				Wi.low  = Wil;
+			}
+
+			var chh  = (eh & fh) ^ (~eh & gh);
+			var chl  = (el & fl) ^ (~el & gl);
+			var majh = (ah & bh) ^ (ah & ch) ^ (bh & ch);
+			var majl = (al & bl) ^ (al & cl) ^ (bl & cl);
+
+			var sigma0h = ((ah >>> 28) | (al << 4))  ^ ((ah << 30)  | (al >>> 2)) ^ ((ah << 25) | (al >>> 7));
+			var sigma0l = ((al >>> 28) | (ah << 4))  ^ ((al << 30)  | (ah >>> 2)) ^ ((al << 25) | (ah >>> 7));
+			var sigma1h = ((eh >>> 14) | (el << 18)) ^ ((eh >>> 18) | (el << 14)) ^ ((eh << 23) | (el >>> 9));
+			var sigma1l = ((el >>> 14) | (eh << 18)) ^ ((el >>> 18) | (eh << 14)) ^ ((el << 23) | (eh >>> 9));
+
+			// t1 = h + sigma1 + ch + K[i] + W[i]
+			var Ki  = K[i];
+			var Kih = Ki.high;
+			var Kil = Ki.low;
+
+			var t1l = hl + sigma1l;
+			var t1h = hh + sigma1h + ((t1l >>> 0) < (hl >>> 0) ? 1 : 0);
+			var t1l = t1l + chl;
+			var t1h = t1h + chh + ((t1l >>> 0) < (chl >>> 0) ? 1 : 0);
+			var t1l = t1l + Kil;
+			var t1h = t1h + Kih + ((t1l >>> 0) < (Kil >>> 0) ? 1 : 0);
+			var t1l = t1l + Wil;
+			var t1h = t1h + Wih + ((t1l >>> 0) < (Wil >>> 0) ? 1 : 0);
+
+			// t2 = sigma0 + maj
+			var t2l = sigma0l + majl;
+			var t2h = sigma0h + majh + ((t2l >>> 0) < (sigma0l >>> 0) ? 1 : 0);
+
+			// Update working variables
+			hh = gh;
+			hl = gl;
+			gh = fh;
+			gl = fl;
+			fh = eh;
+			fl = el;
+			el = (dl + t1l) | 0;
+			eh = (dh + t1h + ((el >>> 0) < (dl >>> 0) ? 1 : 0)) | 0;
+			dh = ch;
+			dl = cl;
+			ch = bh;
+			cl = bl;
+			bh = ah;
+			bl = al;
+			al = (t1l + t2l) | 0;
+			ah = (t1h + t2h + ((al >>> 0) < (t1l >>> 0) ? 1 : 0)) | 0;
+		}
+
+		// Intermediate hash value
+		H0l = H0.low  = (H0l + al);
+		H0.high = (H0h + ah + ((H0l >>> 0) < (al >>> 0) ? 1 : 0));
+		H1l = H1.low  = (H1l + bl);
+		H1.high = (H1h + bh + ((H1l >>> 0) < (bl >>> 0) ? 1 : 0));
+		H2l = H2.low  = (H2l + cl);
+		H2.high = (H2h + ch + ((H2l >>> 0) < (cl >>> 0) ? 1 : 0));
+		H3l = H3.low  = (H3l + dl);
+		H3.high = (H3h + dh + ((H3l >>> 0) < (dl >>> 0) ? 1 : 0));
+		H4l = H4.low  = (H4l + el);
+		H4.high = (H4h + eh + ((H4l >>> 0) < (el >>> 0) ? 1 : 0));
+		H5l = H5.low  = (H5l + fl);
+		H5.high = (H5h + fh + ((H5l >>> 0) < (fl >>> 0) ? 1 : 0));
+		H6l = H6.low  = (H6l + gl);
+		H6.high = (H6h + gh + ((H6l >>> 0) < (gl >>> 0) ? 1 : 0));
+		H7l = H7.low  = (H7l + hl);
+		H7.high = (H7h + hh + ((H7l >>> 0) < (hl >>> 0) ? 1 : 0));
+		
+		//TODO: return processes data
 	}
 	
 });
